@@ -1,0 +1,252 @@
+# Writings
+
+A personal site for poems, blogs and quotes in Gujarati, Hindi and English.
+
+It is one folder of static files. No server, no database, no build step, no
+account with anyone. GitHub hosts it for free and always has; your writing lives
+as a JSON file inside this repository, which means it is versioned, backed up,
+and yours. **There is nothing here that can start charging you.**
+
+---
+
+## Why this shape
+
+| Need | How it is met | What it costs |
+| --- | --- | --- |
+| Hosting | GitHub Pages | Free, permanently, for public repos |
+| Storage | `data/content.json` in this repo | Free — it is just a file |
+| Editing | Admin panel in the browser | Free |
+| Publishing | A commit through the GitHub API | Free |
+| Fonts | Google Fonts, loaded on demand | Free |
+| Feedback | Your email, or any free form service | Free |
+| Backups | Git history + an export button | Free |
+
+The one thing a static site genuinely cannot do is *receive* a message. That is
+the only place an outside service appears, and it is optional — see
+[Feedback](#feedback).
+
+---
+
+## Turning it on
+
+### 1. Publish the site
+
+In this repository on GitHub: **Settings → Pages**. Under *Build and
+deployment*, set **Source: Deploy from a branch**, pick the `main` branch and
+the `/ (root)` folder, and save.
+
+A minute later the site is live at:
+
+```
+https://penpaper0878.github.io/instatements/writings/
+```
+
+Open it on your phone and use *Add to Home Screen* — it installs like an app and
+works offline.
+
+### 2. Become the admin
+
+Scroll to the bottom of any page and tap the small **lock**. The first time, you
+choose a passphrase; after that it unlocks the editing tools on that device.
+
+You will see a **+** button appear in the corner and a **gear** in the header.
+
+### 3. Make it yours
+
+Gear → **Site**: your name, the site's name, a photo, links, a contact email.
+The site name can be different in each language if you want it to be.
+
+Gear → **Theme**: eight palettes, light/dark/automatic, a custom accent colour,
+page backgrounds, and a separate font for each of the three scripts.
+
+Gear → **Home page**: the layout, how many pieces show before *See more*, which
+tabs exist, and what the big header says.
+
+### 4. Set up publishing
+
+Gear → **Publish**.
+
+The owner and repository should already be filled in. You need one token:
+
+1. Go to **github.com → Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens → Generate new token**.
+   (Or use the button in the Publish panel, which links straight there.)
+2. **Repository access:** *Only select repositories* → `instatements`.
+3. **Permissions → Repository permissions → Contents:** *Read and write*.
+   Nothing else. That is the whole list.
+4. Generate it, copy it, and paste it into the Publish panel.
+5. Press **Test connection**. It should say it is connected.
+
+Now **Publish** pushes your work live in about a minute.
+
+> The token is stored in your browser's local storage on that device only. It is
+> never written into any file this site serves, so no visitor can ever read it.
+> If you lose the device, revoke the token on GitHub and make a new one.
+
+---
+
+## Writing
+
+Press **+**, or just hit `N`.
+
+- **Kind** — poem, blog or quote. Quotes get centred and styled like quotes;
+  blogs get a reading time.
+- **Language** — Gujarati, Hindi or English. This picks the typeface and tells
+  the browser how to shape the script, so set it correctly.
+- **Writing** — your line breaks are kept exactly as typed. In a poem the breaks
+  *are* the poem.
+- **Keep as draft** — only you can see it. It is not published.
+
+The **Style** tab restyles that one piece on its own: a different typeface, a
+larger size, looser lines, a colour, a gradient, or a photograph behind the
+words. The preview at the top updates as you type.
+
+Keyboard: `N` for a new piece, `Ctrl/Cmd + S` to publish.
+
+### Bringing in writing you already have
+
+Gear → **Data → Import .txt files**. Select as many as you like; each becomes
+one piece, the filename becomes the title, and the language is detected from the
+script. Everything arrives as a draft so you can review before publishing.
+
+---
+
+## Sharing
+
+Open any piece and press **Share**:
+
+- **Save as image** — a picture sized for a post, a story or a wide card, drawn
+  with your own fonts and colours and signed with your name.
+- **Save as PDF** — opens the print dialog; choose *Save as PDF*.
+- **Copy as text**, **Download .txt**, **Copy link**, **WhatsApp**, and the
+  system share sheet on phones.
+
+> **Why PDF goes through the print dialog.** JavaScript PDF libraries need an
+> embedded font carrying full Indic shaping tables, and mostly render Gujarati
+> and Devanagari wrong — broken matras, conjuncts falling apart. The browser's
+> own print engine is the same one drawing the text on screen, so it is always
+> correct. It is also free and needs no library.
+
+---
+
+## Feedback
+
+Readers get a feedback form with an optional name and email, and a dropdown so
+they can point at one specific piece.
+
+The link only appears once a message has somewhere to go. Two ways:
+
+**Email (nothing to set up).** Gear → Site → Contact email. Send opens the
+reader's own mail app with the whole message already written. Always works,
+never breaks, costs nothing.
+
+**A form service (messages arrive on their own).** Gear → Feedback → Form
+endpoint. Any service that accepts a JSON POST works:
+
+| Service | Endpoint | Notes |
+| --- | --- | --- |
+| Web3Forms | `https://api.web3forms.com/submit` | Also paste the access key |
+| Formspree | `https://formspree.io/f/xxxxxxxx` | No key needed |
+| Getform | `https://getform.io/f/xxxxxxxx` | No key needed |
+| Google Apps Script | your deployed web app URL | Free, and entirely yours |
+
+If the service ever disappears or starts charging, change one field. The email
+fallback is always there underneath.
+
+The form carries a hidden honeypot field that silently absorbs bot submissions.
+
+---
+
+## What "only I can upload" actually means
+
+Worth being precise, because this is a static site and every line of its code is
+public.
+
+**The passphrase is a convenience, not a wall.** It is stored as a slow PBKDF2
+hash (250,000 rounds, salted), so it cannot be read back out of the file — but a
+determined visitor could still flip a flag in their browser's devtools and see
+the admin panels.
+
+**That costs nothing, because it changes nothing.** Editing only ever writes to
+*their own browser's* storage. The live site is a file in your repository, and
+changing it requires the GitHub token — which exists only in your browser and in
+no file this site serves. A visitor has nothing to find and nothing to push.
+
+So: the passphrase keeps the interface out of the way, and the token is what
+actually makes the site yours.
+
+---
+
+## Backups
+
+Gear → **Data**:
+
+- **Backup (.json)** — the whole site in one file: every piece, every collection,
+  every setting. Keep one somewhere safe.
+- **All writing (.txt)** — just the words, readable anywhere, forever.
+
+Every publish is also a Git commit, so the repository already holds every version
+you have ever published. Nothing is ever really lost.
+
+---
+
+## A custom domain
+
+Buy a domain anywhere, then in **Settings → Pages → Custom domain** enter it and
+add the DNS records GitHub shows you. HTTPS is issued free and renews itself.
+Hosting stays free.
+
+---
+
+## The files
+
+```
+writings/
+├── index.html              the page shell
+├── manifest.json           installable-app metadata
+├── sw.js                   offline cache
+├── data/content.json       ← your entire site lives here
+├── icons/                  app icons
+└── assets/
+    ├── css/app.css         all styling; every value is a CSS variable
+    └── js/
+        ├── store.js        the data model, loading, saving, the admin gate
+        ├── i18n.js         interface strings in gu / hi / en
+        ├── theme.js        palettes, the font catalogue, backgrounds
+        ├── ui.js           icons, sheets, toasts, form controls
+        ├── views.js        header, hero, tabs, cards, the reading view
+        ├── share.js        image, PDF, text, link, import and export
+        ├── publish.js      committing to GitHub
+        ├── editor.js       the writing editor and the admin unlock
+        ├── settings.js     the settings panels
+        ├── feedback.js     the feedback form
+        └── app.js          routing and start-up
+```
+
+Plain scripts, no bundler, no dependencies. Open `index.html` through any local
+web server and it runs.
+
+---
+
+## If something goes wrong
+
+**Publish says the token was rejected.** It expired or was revoked. Make a new
+one and paste it in.
+
+**Publish says there is no permission.** The token needs *Contents: Read and
+write*, and this repository must be in its *Only select repositories* list.
+
+**The site did not update after publishing.** GitHub Pages takes up to a minute.
+Check the **Actions** tab for the deployment, then hard-refresh.
+
+**Fonts look wrong.** Google Fonts was unreachable; the site falls back to your
+device's own Gujarati and Devanagari fonts and stays readable. It fixes itself on
+the next load.
+
+**Everything vanished on a device.** That device had an unpublished draft and
+lost its storage. Your published site is unaffected — reload it. Restore a
+backup from Gear → Data if you had local work.
+
+**Locked out of admin.** Edit `data/content.json` in GitHub directly, empty the
+`admin.passHash` and `admin.passSalt` strings, and commit. The next unlock lets
+you set a new passphrase.

@@ -1,0 +1,24 @@
+{
+  "name": "My Writings",
+  "short_name": "Writings",
+  "description": "Poems, blogs and quotes in Gujarati, Hindi and English.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15120E",
+  "theme_color": "#15120E",
+  "categories": ["books", "lifestyle", "education"],
+  "lang": "gu",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Poems", "url": "./index.html#/" },
+    { "name": "Feedback", "url": "./index.html#/feedback" }
+  ]
+}
