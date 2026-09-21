@@ -631,7 +631,38 @@ body.is-scrolled .tabs-wrap {
   background: var(--surface-2);
   color: var(--text-faint);
   border: 1px solid var(--border);
+  font-family: inherit;
+  line-height: 1.7;
 }
+/* Tag pills are real buttons: clicking one filters the whole page by it. */
+button.tag-pill { cursor: pointer; transition: all .16s ease; }
+button.tag-pill:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+button.tag-pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.tag-pill-lg { font-size: 13.5px; padding: 7px 14px; display: inline-flex; align-items: center; gap: 8px; }
+.tag-count {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: .6;
+}
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* The removable chip showing which tag is currently filtering the page. */
+.chip-clearable { display: inline-flex; align-items: center; gap: 6px; max-width: 220px; }
+.chip-clearable > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip-clearable svg { width: 13px; height: 13px; stroke-width: 2.4; flex: none; opacity: .8; }
 .card.has-bg .tag-pill {
   background: rgba(255,255,255,.14);
   border-color: rgba(255,255,255,.2);
@@ -930,6 +961,8 @@ body.is-scrolled .tabs-wrap {
 .reader.on-dark .reader-meta,
 .reader.on-dark .reader-actions { border-color: rgba(255,255,255,.18); }
 .reader.on-dark .tag-pill { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.22); color: rgba(255,255,255,.88); }
+.reader.on-dark button.tag-pill:hover { background: rgba(255,255,255,.26); color: #FFFFFF; }
+.reader.on-light button.tag-pill:hover { background: rgba(20,17,13,.1); color: #14110D; }
 .reader.on-light { color: #14110D; }
 .reader.on-light .reader-meta,
 .reader.on-light .reader-credit { color: rgba(20,17,13,.68); }

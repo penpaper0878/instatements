@@ -103,6 +103,15 @@ words. The preview at the top updates as you type.
 
 Keyboard: `N` for a new piece, `Ctrl/Cmd + S` to publish.
 
+### Tags
+
+Tags are how you get through a few hundred pieces. Add them in the editor,
+comma-separated, in any script — `ગઝલ, વરસાદ` works as well as `love, monsoon`.
+
+Every tag on the site is then clickable: on a card, inside a piece, or from the
+tag button next to the language filter, which lists all of them with counts.
+Clicking the tag that is already filtering turns it off again.
+
 ### Bringing in writing you already have
 
 Gear → **Data → Import .txt files**. Select as many as you like; each becomes
@@ -120,6 +129,15 @@ Open any piece and press **Share**:
 - **Save as PDF** — opens the print dialog; choose *Save as PDF*.
 - **Copy as text**, **Download .txt**, **Copy link**, **WhatsApp**, and the
   system share sheet on phones.
+
+> **On link previews.** When you paste a link to one piece into WhatsApp or
+> Facebook, the preview card will show the site's name, not the poem. That is
+> not a fault you can fix here: the whole site is one file, and the apps that
+> build those previews do not run the JavaScript that would pick out the piece.
+> Fixing it properly would mean generating a separate HTML file per piece,
+> which means a build step — and a build step is the thing that eventually
+> breaks or starts costing money. **Share the image instead:** it carries the
+> actual words, looks better in a chat, and needs nothing from anyone.
 
 > **Why PDF goes through the print dialog.** JavaScript PDF libraries need an
 > embedded font carrying full Indic shaping tables, and mostly render Gujarati

@@ -13,6 +13,7 @@
     tab: 'all',
     lang: 'all',
     query: '',
+    tag: '',
     shown: 0,
     collection: ''
   };
@@ -91,16 +92,56 @@
     Object.keys(css).forEach(function (k) { node.style[k] = css[k]; });
   }
 
+  /* Tags are the natural way through a few hundred poems — everything tagged
+     ગઝલ, everything about વરસાદ. Clicking the tag already showing turns the
+     filter back off, so a tag pill is a toggle wherever it appears. */
+  function filterByTag(tag) {
+    view.tag = view.tag === tag ? '' : tag;
+    view.shown = 0;
+    renderMain();
+    var host = UI.$('#grid-host');
+    if (host) {
+      var top = host.getBoundingClientRect().top + global.scrollY - 150;
+      if (global.scrollY > top) global.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  }
+
+  /* A tag pill. Inside a card it must not also trigger the card's own click,
+     hence the stopPropagation. */
+  function tagPill(tag, opts) {
+    opts = opts || {};
+    return el('button', {
+      class: 'tag-pill' + (view.tag === tag ? ' is-active' : ''),
+      type: 'button',
+      title: view.tag === tag ? t('action.clear') : tag,
+      text: tag,
+      onclick: function (e) {
+        e.stopPropagation();
+        if (opts.closeSheet) UI.closeSheet();
+        filterByTag(tag);
+      }
+    });
+  }
+
   /* ------------------------------------------------------------------ card */
 
   function entryCard(entry) {
     var s = styleFor(entry, { scale: false });
-    var card = el('button', {
+    /* A div rather than a button: the tag pills inside are buttons themselves,
+       and nesting buttons is invalid HTML that browsers handle inconsistently.
+       role and tabindex keep it reachable by keyboard and screen reader. */
+    function open() { Router.go('/e/' + entry.id); }
+    var card = el('div', {
       class: 'card' + (s.bg ? ' has-bg ' + s.cls : ''),
-      type: 'button',
+      role: 'button',
+      tabindex: '0',
       'data-type': entry.type,
       lang: entry.lang,
-      onclick: function () { Router.go('/e/' + entry.id); }
+      'aria-label': entry.title || preview(entry, 1),
+      onclick: open,
+      onkeydown: function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+      }
     });
 
     if (s.bg) {
@@ -133,9 +174,7 @@
     ]);
 
     var tags = el('div', { class: 'card-tags' },
-      (entry.tags || []).slice(0, 3).map(function (tag) {
-        return el('span', { class: 'tag-pill', text: tag });
-      }));
+      (entry.tags || []).slice(0, 3).map(function (tag) { return tagPill(tag); }));
 
     var foot = el('div', { class: 'card-foot' }, [
       tags,
@@ -435,7 +474,8 @@
             box.classList.remove('has-value');
             renderGridOnly();
             input.focus();
-          }
+          },
+          type: 'button'
         }, icon('x'))
       ]);
       row.appendChild(box);
@@ -457,7 +497,50 @@
       })));
     }
 
+    /* The tag browser stays behind one small button rather than spilling every
+       tag across the page. Sites accumulate tags; a filter bar should not grow
+       with them. */
+    var tags = Store.allTags();
+    if (tags.length) {
+      row.appendChild(el('button', {
+        class: 'chip' + (view.tag ? ' is-active' : ''),
+        'aria-label': 'Browse by tag',
+        title: 'Browse by tag',
+        onclick: function () { openTagBrowser(tags); }
+      }, icon('tag')));
+    }
+
+    if (view.tag) {
+      row.appendChild(el('button', {
+        class: 'chip is-active chip-clearable',
+        title: t('action.clear'),
+        onclick: function () { filterByTag(view.tag); }
+      }, [el('span', { text: view.tag }), icon('x')]));
+    }
+
     return row;
+  }
+
+  function openTagBrowser(tags) {
+    var body = el('div', { class: 'tag-cloud' }, tags.map(function (item) {
+      return el('button', {
+        class: 'tag-pill tag-pill-lg' + (view.tag === item.tag ? ' is-active' : ''),
+        type: 'button',
+        onclick: function () {
+          UI.closeSheet();
+          filterByTag(item.tag);
+        }
+      }, [
+        el('span', { text: item.tag }),
+        el('span', { class: 'tag-count', text: String(item.count) })
+      ]);
+    }));
+
+    UI.openSheet({
+      title: 'Browse by tag',
+      variant: 'center',
+      body: body
+    });
   }
 
   /* ------------------------------------------------------------------ grid */
@@ -467,6 +550,7 @@
       type: Store.TYPE_OF_TAB[view.tab] || null,
       lang: view.lang,
       query: view.query,
+      tag: view.tag || null,
       collection: view.collection || null
     });
   }
@@ -500,7 +584,7 @@
 
     var list = currentEntries();
     if (!list.length) {
-      host.appendChild(emptyState(!!(view.query || view.lang !== 'all')));
+      host.appendChild(emptyState(!!(view.query || view.tag || view.lang !== 'all')));
       return;
     }
 
@@ -712,7 +796,7 @@
 
     if ((entry.tags || []).length) {
       inner.appendChild(el('div', { class: 'reader-tags' }, entry.tags.map(function (tag) {
-        return el('span', { class: 'tag-pill', text: tag });
+        return tagPill(tag, { closeSheet: true });
       })));
     }
 
@@ -743,6 +827,8 @@
 
   global.Views = {
     view: view,
+    filterByTag: filterByTag,
+    tagPill: tagPill,
     renderTopbar: renderTopbar,
     renderMain: renderMain,
     renderAbout: renderAbout,
