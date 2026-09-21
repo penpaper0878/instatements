@@ -287,6 +287,33 @@
     return lum > 0.45;
   }
 
+  /* Colours and image URLs are stored in content.json, which can arrive from an
+     imported backup file. These two guards keep a hostile value from turning
+     into a CSS construct of its own — a colour smuggling `), url(...)` into a
+     gradient, say, which would make the page fetch something the author never
+     asked for. Both are assigned through CSSOM, so this is hygiene rather than
+     an XSS hole, but a bad value should fail closed rather than sideways. */
+
+  var COLOUR_RE = /^(#[0-9a-f]{3,8}|rgba?\([\d.,%\s/]+\)|hsla?\([\d.,%\sdegrad/]+\)|[a-z]{3,20})$/i;
+
+  function safeColour(value, fallback) {
+    var v = String(value == null ? '' : value).trim();
+    return COLOUR_RE.test(v) ? v : (fallback || 'transparent');
+  }
+
+  /* Only images may become a background: an https URL, an inline data: image,
+     or a path inside this site. Anything else yields '' and the caller falls
+     back to a plain colour. */
+  function safeImageUrl(value) {
+    var v = String(value == null ? '' : value).trim();
+    if (!v) return '';
+    if (/[\s"'()\\]/.test(v)) return '';          // nothing that can close url()
+    if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,[A-Za-z0-9+/=]+$/i.test(v)) return v;
+    if (/^https:\/\/[^\s]+$/i.test(v)) return v;
+    if (/^\.{0,2}\/[^\s]*$/.test(v) && v.indexOf('//') !== 0) return v;
+    return '';
+  }
+
   /* Turn a {bgType, ...} spec into CSS. Returns null when the spec says
      "inherit", so callers know to leave the surface alone. */
   function backgroundCSS(spec) {
@@ -295,11 +322,12 @@
     if (!type || type === 'inherit' || type === 'preset') return null;
 
     if (type === 'solid') {
-      return { image: 'none', color: spec.bgColor || '#000000', dark: !isLight(spec.bgColor) };
+      var solid = safeColour(spec.bgColor, '#000000');
+      return { image: 'none', color: solid, dark: !isLight(solid) };
     }
     if (type === 'gradient') {
-      var from = spec.gradFrom || '#222222';
-      var to   = spec.gradTo   || '#000000';
+      var from = safeColour(spec.gradFrom, '#222222');
+      var to   = safeColour(spec.gradTo, '#000000');
       var ang  = Number(spec.gradAngle);
       if (!isFinite(ang)) ang = 160;
       return {
@@ -311,14 +339,17 @@
         dark: !isLight(mixHex(from, to, 0.5))
       };
     }
-    if (type === 'image' && spec.bgImage) {
+    if (type === 'image') {
+      var src = safeImageUrl(spec.bgImage);
+      if (!src) return null;
       var dim = Number(spec.bgDim);
       if (!isFinite(dim)) dim = 0.35;
+      dim = Math.max(0, Math.min(1, dim));
       var veil = 'linear-gradient(rgba(0,0,0,' + dim + '), rgba(0,0,0,' + dim + '))';
       return {
-        image: veil + ', url("' + String(spec.bgImage).replace(/"/g, '%22') + '")',
+        image: veil + ', url("' + src + '")',
         color: '#111111',
-        blur: Number(spec.bgBlur) || 0,
+        blur: Math.max(0, Math.min(40, Number(spec.bgBlur) || 0)),
         dark: true,
         isImage: true
       };
@@ -335,7 +366,7 @@
     var p = preset[mode];
     var root = document.documentElement;
 
-    var accent = theme.accent || p.accent;
+    var accent = safeColour(theme.accent, p.accent);
     var onAccent = isLight(accent) ? '#14110D' : '#FFFFFF';
 
     var vars = {
@@ -431,6 +462,8 @@
     watchSystemMode: watchSystemMode,
     isLight: isLight,
     mixHex: mixHex,
+    safeColour: safeColour,
+    safeImageUrl: safeImageUrl,
     rgba: rgba,
     hexToRgb: hexToRgb
   };

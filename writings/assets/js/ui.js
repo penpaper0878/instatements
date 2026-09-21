@@ -29,11 +29,14 @@
     return String(value == null ? '' : value).replace(/["'\\<>();]/g, '');
   }
 
-  /* Only http(s) and data:image URLs may become a src or background. Blocks
-     javascript: and friends arriving through an imported file. */
+  /* Only http(s) and data:image URLs may become a src or an href. Blocks
+     javascript: and friends arriving through an imported file, along with the
+     quotes and parentheses that would let a value escape a CSS url() if it
+     ever reached one. Backgrounds use Theme.safeImageUrl, which is stricter. */
   function safeUrl(value) {
     var v = String(value == null ? '' : value).trim();
     if (!v) return '';
+    if (/["'<>\\\s]/.test(v)) return '';
     if (/^data:image\/(png|jpe?g|gif|webp|avif|svg\+xml);base64,/i.test(v)) return v;
     if (/^https?:\/\//i.test(v)) return v;
     if (/^\.{0,2}\//.test(v) && !/^\/\//.test(v)) return v;   // site-relative
@@ -424,14 +427,24 @@
 
   /* Reads a picked file as a data URL so images survive export/import and work
      offline — no upload host to depend on, and nothing to pay for. */
+  /* Raster formats only. An SVG can carry markup of its own, and a picture
+     someone dropped into a backup file is not worth the argument — so the
+     dialog does not offer one, and a renamed file is refused out loud rather
+     than silently doing nothing. */
+  var IMAGE_TYPES = 'image/png,image/jpeg,image/gif,image/webp,image/avif';
+
   function pickImage(onLoad, maxBytes) {
     var limit = maxBytes || 1400000;
-    var input = el('input', { type: 'file', accept: 'image/*', style: { display: 'none' } });
+    var input = el('input', { type: 'file', accept: IMAGE_TYPES, style: { display: 'none' } });
     document.body.appendChild(input);
     input.addEventListener('change', function () {
       var file = input.files && input.files[0];
       document.body.removeChild(input);
       if (!file) return;
+      if (IMAGE_TYPES.indexOf(file.type) === -1) {
+        toast('Please use a PNG, JPEG, GIF, WebP or AVIF image.', 'error');
+        return;
+      }
       if (file.size > limit) {
         toast('That image is ' + Math.round(file.size / 1024) + ' KB. Please use one under ' +
               Math.round(limit / 1024) + ' KB.', 'error');

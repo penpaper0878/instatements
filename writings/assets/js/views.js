@@ -59,7 +59,6 @@
   function styleFor(entry, opts) {
     opts = opts || {};
     var st = entry.style || {};
-    var theme = data().theme;
     var css = {};
     var cls = '';
 
@@ -84,9 +83,6 @@
     } else if (st.textColor) {
       css.color = st.textColor;
     }
-
-    // A background the theme itself provides is not "custom" for our purposes.
-    if (!bg && (theme.bgType === 'image')) cls = '';
 
     return { css: css, cls: cls, bg: bg };
   }
@@ -169,7 +165,7 @@
         'linear-gradient(160deg, ' + Theme.rgba(col.accent, 0.3) + ', var(--surface))';
       card.style.borderColor = Theme.rgba(col.accent, 0.4);
     }
-    var cover = UI.safeUrl(col.cover);
+    var cover = Theme.safeImageUrl(col.cover);
     if (cover) {
       card.style.backgroundImage =
         'linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.25)), url("' + cover + '")';
@@ -364,7 +360,18 @@
     var wrap = el('div', { class: 'tabs-wrap' });
     var tabs = el('nav', { class: 'tabs', role: 'tablist' });
 
-    home.tabs.forEach(function (id) {
+    /* "All" is always offered, whatever an imported file says. And if the tab
+       currently in view was just switched off in settings, fall back to it —
+       otherwise the grid keeps filtering by a tab that is no longer on screen,
+       and the page looks broken for no visible reason. */
+    var list = (home.tabs || []).slice();
+    if (list.indexOf('all') === -1) list.unshift('all');
+    if (list.indexOf(view.tab) === -1) {
+      view.tab = 'all';
+      view.shown = 0;
+    }
+
+    list.forEach(function (id) {
       if (id === 'collections' && !c.collections && !Store.state.isAdmin) return;
       var count = c[id] || 0;
       tabs.appendChild(el('button', {

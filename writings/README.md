@@ -188,6 +188,12 @@ Gear → **Data**:
 Every publish is also a Git commit, so the repository already holds every version
 you have ever published. Nothing is ever really lost.
 
+**On importing.** A backup file carries settings as well as writing — colours,
+fonts, background images, links. Values arriving that way are validated before
+they reach the page: markup in a title or a poem is shown as text, a colour that
+is not a colour falls back to the theme's, and a background image must be a
+plain https or inline image. Still, only restore backups you made yourself.
+
 ---
 
 ## A custom domain
