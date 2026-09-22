@@ -158,6 +158,7 @@
   function registerWorker() {
     if (!('serviceWorker' in global.navigator)) return;
     if (global.location.protocol === 'file:') return;   // not allowed there
+    if (global.__PREVIEW__) return;                    // sandboxed preview
     global.navigator.serviceWorker.register('sw.js').catch(function (err) {
       console.warn('[sw]', err && err.message);
     });
