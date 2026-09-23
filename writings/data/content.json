@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-23T17:23:10.076Z",
+  "updatedAt": "2026-09-23T17:26:53.494Z",
   "site": {
     "name": "My Writings",
     "nameGu": "",
@@ -16,9 +16,9 @@
     "links": []
   },
   "theme": {
-    "preset": "ink",
+    "preset": "midnight",
     "mode": "auto",
-    "accent": "#A9662B",
+    "accent": "#3c3ffb",
     "bgType": "preset",
     "bgColor": "",
     "gradFrom": "",
@@ -28,20 +28,20 @@
     "bgDim": 0.45,
     "bgBlur": 0,
     "fontEn": "Fraunces",
-    "fontGu": "Hind Vadodara",
-    "fontHi": "Hind",
+    "fontGu": "Noto Sans Gujarati",
+    "fontHi": "Tiro Devanagari Hindi",
     "fontUi": "Inter",
     "baseSize": 17,
     "radius": 18,
-    "cardStyle": "paper",
+    "cardStyle": "glass",
     "density": "comfortable"
   },
   "home": {
-    "layout": "magazine",
+    "layout": "grid",
     "perPage": 9,
     "hero": {
       "enabled": true,
-      "title": "",
+      "title": "Versify By Yash",
       "subtitle": "",
       "showAvatar": true,
       "align": "center",
