@@ -1,7 +1,8 @@
 // Instatements service worker — caches the app shell so the app opens instantly
 // and keeps working offline. All expense data itself lives in the browser's
 // local storage on-device, never on a server.
-var CACHE_NAME = 'instatements-v1';
+var CACHE_PREFIX = 'instatements-';
+var CACHE_NAME = CACHE_PREFIX + 'v1';
 var APP_SHELL = [
   './index.html',
   './manifest.json',
@@ -23,7 +24,12 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys()
       .then(function (keys) {
-        return Promise.all(keys.filter(function (k) { return k !== CACHE_NAME; }).map(function (k) { return caches.delete(k); }));
+        // Clear only our own older versions. This origin also hosts the
+        // writings site under /writings/, which keeps its own cache and its
+        // own worker; deleting every unfamiliar key would knock it offline.
+        return Promise.all(keys.filter(function (k) {
+          return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE_NAME;
+        }).map(function (k) { return caches.delete(k); }));
       })
       .then(function () { return self.clients.claim(); })
   );
