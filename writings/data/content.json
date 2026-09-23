@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-23T17:22:41.860Z",
+  "updatedAt": "2026-09-23T17:23:10.076Z",
   "site": {
     "name": "My Writings",
     "nameGu": "",
@@ -37,7 +37,7 @@
     "density": "comfortable"
   },
   "home": {
-    "layout": "masonry",
+    "layout": "magazine",
     "perPage": 9,
     "hero": {
       "enabled": true,
