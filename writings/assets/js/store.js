@@ -373,8 +373,18 @@
         state.isAdmin = !!session.unlocked;
 
         if (draft && state.isAdmin) {
-          state.data = normalise(draft);
-          state.dirty = true;
+          var draftData = normalise(draft);
+          // The published file may already match this draft — the author
+          // uploaded it by hand, or published from another device. Without
+          // this check the site would claim unpublished changes forever.
+          if (state.published && sameContent(draftData, state.published)) {
+            try { global.localStorage.removeItem(LS.draft); } catch (err) { /* ignore */ }
+            state.data = clone(state.published);
+            state.dirty = false;
+          } else {
+            state.data = draftData;
+            state.dirty = true;
+          }
         } else {
           state.data = clone(state.published || normalise(DEFAULTS));
           state.dirty = false;
@@ -382,6 +392,21 @@
         emit('change');
         return state.data;
       });
+  }
+
+  /* Two versions hold the same site when everything but the timestamp matches;
+     the timestamp changes on every keystroke and would never compare equal. */
+  function sameContent(a, b) {
+    var strip = function (data) {
+      var copy = clone(data);
+      copy.updatedAt = '';
+      return JSON.stringify(copy);
+    };
+    try {
+      return strip(a) === strip(b);
+    } catch (err) {
+      return false;
+    }
   }
 
   /* ------------------------------------------------------------------ events */
@@ -583,6 +608,7 @@
     markDirty: markDirty,
     markPublished: markPublished,
     discardDraft: discardDraft,
+    sameContent: sameContent,
 
     hasPassphrase: hasPassphrase,
     setPassphrase: setPassphrase,

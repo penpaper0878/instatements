@@ -158,6 +158,33 @@
       });
   }
 
+  /* ------------------------------------------------------- the file itself  */
+
+  /* Exactly what a publish commits. Kept in one place so the manual route and
+     the automatic one can never drift apart and produce different files. */
+  function contentFile() {
+    var payload = Store.exportData();
+    payload.updatedAt = new Date().toISOString();
+    return { payload: payload, text: JSON.stringify(payload, null, 2) + '\n' };
+  }
+
+  function commitMessage() {
+    var c = Store.counts();
+    return 'Update writings — ' + c.all + ' pieces (' +
+      c.poems + ' poems, ' + c.blogs + ' blogs, ' + c.quotes + ' quotes)';
+  }
+
+  /* The escape hatch when GitHub's token screens will not cooperate. Downloads
+     the same file for the author to upload through GitHub's web interface. */
+  function downloadContentFile() {
+    var file = contentFile();
+    UI.downloadBlob(
+      new Blob([file.text], { type: 'application/json' }),
+      'content.json'
+    );
+    UI.toast('Saved. Upload it to ' + config().path + ' on GitHub.', 'ok', 6000);
+  }
+
   /* --------------------------------------------------------------- publish  */
 
   var inFlight = false;
@@ -175,13 +202,10 @@
     inFlight = true;
     var note = UI.toast(t('admin.publishing'), null, 60000);
 
-    var payload = Store.exportData();
-    payload.updatedAt = new Date().toISOString();
-    var content = JSON.stringify(payload, null, 2) + '\n';
-
-    var counts = Store.counts();
-    var message = 'Update writings — ' + counts.all + ' pieces (' +
-      counts.poems + ' poems, ' + counts.blogs + ' blogs, ' + counts.quotes + ' quotes)';
+    var file = contentFile();
+    var payload = file.payload;
+    var content = file.text;
+    var message = commitMessage();
 
     function attempt(retry) {
       return currentSha(cfg)
@@ -211,6 +235,8 @@
 
   global.Publish = {
     publish: publish,
+    contentFile: contentFile,
+    downloadContentFile: downloadContentFile,
     test: test,
     guessTarget: guessTarget,
     toBase64: toBase64

@@ -481,9 +481,10 @@
 
     host.appendChild(el('div', { class: 'section-title', text: 'Access token' }));
     host.appendChild(el('div', { class: 'feedback-note', text:
-      'Create a fine-grained personal access token on GitHub with only this one repository selected, and only ' +
-      '“Contents: Read and write”. It is stored in this browser alone — never in any file this site serves, ' +
-      'so no visitor can ever see it.' }));
+      'Either kind of GitHub token works. A fine-grained one is tidier — limit it to this one repository and to ' +
+      '“Contents: Read and write”. A classic token with the “repo” box ticked is quicker to make. Whichever you ' +
+      'choose, it is stored in this browser alone and never written into any file this site serves, so no ' +
+      'visitor can see it.' }));
 
     var tokenInput = el('input', {
       class: 'input', type: 'password',
@@ -502,12 +503,20 @@
       }, icon('eye'))
     ])));
 
-    host.appendChild(el('a', {
-      class: 'btn btn-sm',
-      href: 'https://github.com/settings/personal-access-tokens/new',
-      target: '_blank', rel: 'noopener noreferrer',
-      style: { marginBottom: '18px' }
-    }, [icon('github'), el('span', { text: 'Create a token on GitHub' })]));
+    host.appendChild(el('div', {
+      style: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' }
+    }, [
+      el('a', {
+        class: 'btn btn-sm',
+        href: 'https://github.com/settings/personal-access-tokens/new',
+        target: '_blank', rel: 'noopener noreferrer'
+      }, [icon('github'), el('span', { text: 'Fine-grained token' })]),
+      el('a', {
+        class: 'btn btn-sm',
+        href: 'https://github.com/settings/tokens/new?scopes=repo&description=writings%20site',
+        target: '_blank', rel: 'noopener noreferrer'
+      }, [icon('github'), el('span', { text: 'Classic token' })])
+    ]));
 
     var status = el('div', { class: 'field-hint', style: { marginBottom: '14px' } });
     host.appendChild(status);
@@ -539,6 +548,31 @@
         text: 'You have changes that are not published yet.'
       }));
     }
+
+    /* Tokens are the pleasant way to publish, not the only way. If GitHub's
+       token screens are being difficult, this downloads exactly the file the
+       Publish button would have committed, to upload by hand. Same result,
+       a few more clicks, nothing to set up. */
+    host.appendChild(el('div', { class: 'section-title', text: 'Publishing without a token' }));
+    host.appendChild(el('div', { class: 'feedback-note', text:
+      'Download the file below, then on GitHub open ' + p.path.replace(/\/[^/]*$/, '') + ' → Add file → ' +
+      'Upload files, drop it in and press Commit changes. Your site updates the same way it would have. ' +
+      'Keep the name content.json exactly.' }));
+
+    host.appendChild(el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, [
+      el('button', {
+        class: 'btn btn-sm', type: 'button',
+        onclick: function () { Publish.downloadContentFile(); }
+      }, [icon('download'), el('span', { text: 'Download content.json' })]),
+      el('a', {
+        class: 'btn btn-sm',
+        href: p.owner && p.repo
+          ? 'https://github.com/' + encodeURIComponent(p.owner) + '/' + encodeURIComponent(p.repo) +
+            '/upload/' + encodeURIComponent(p.branch || 'main') + '/' + p.path.replace(/\/[^/]*$/, '')
+          : 'https://github.com',
+        target: '_blank', rel: 'noopener noreferrer'
+      }, [icon('github'), el('span', { text: 'Open the upload page' })])
+    ]));
 
     return host;
   }
