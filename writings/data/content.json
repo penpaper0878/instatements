@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-23T17:26:53.494Z",
+  "updatedAt": "2026-09-25T11:12:00.945Z",
   "site": {
     "name": "My Writings",
     "nameGu": "",
@@ -60,6 +60,40 @@
     "sortBy": "date-desc"
   },
   "entries": [
+    {
+      "type": "poem",
+      "lang": "hi",
+      "date": "2026-09-25",
+      "id": "e_mugkbp7ezryag",
+      "title": "समय और रिश्ते",
+      "body": "घड़ी की रफ्तार ऐसी बढ़ी, \nछूट गया सब पीछे, \nजो कभी संग थे मेरे, \nताने वाने ऐसे उलझे,\nबेरंग हो गए रिश्ते,\nजो कभी थे बहुत गहरे, \nहोगी कही इसमें भूल मेरी,\n कि रूठे से लगते हैं फसाने सारे, \nसोचता हूँ कुछ हो ऐसे,\n फिर मिल जाए वही वक्त,\n कि बाँट लूँ वो लम्हे,\nफिर उनसे जो कभी पास थे मेरे।",
+      "excerpt": "",
+      "tags": [],
+      "collections": [],
+      "pinned": false,
+      "draft": false,
+      "cover": "",
+      "credit": "",
+      "style": {
+        "preset": "inherit",
+        "font": "",
+        "size": 1,
+        "lineHeight": 1.85,
+        "letterSpacing": 0,
+        "align": "center",
+        "textColor": "",
+        "bgType": "gradient",
+        "bgColor": "#101418",
+        "gradFrom": "#F6D365",
+        "gradTo": "#FDA085",
+        "gradAngle": 160,
+        "bgImage": "",
+        "bgDim": 0.35,
+        "bgBlur": 0,
+        "textShadow": false,
+        "frame": "box"
+      }
+    },
     {
       "id": "seed_guide",
       "type": "blog",
