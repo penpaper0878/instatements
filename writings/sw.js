@@ -9,7 +9,10 @@
    ========================================================================== */
 
 var CACHE_PREFIX = 'writings-';
-var CACHE = CACHE_PREFIX + 'v1';
+// Bump this whenever the app's own files change. A new name makes the browser
+// install a fresh worker, which clears the old cache and serves the new code
+// on the next visit instead of handing back a stale copy first.
+var CACHE = CACHE_PREFIX + 'v2';
 
 var SHELL = [
   './',

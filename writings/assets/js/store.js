@@ -277,25 +277,41 @@
       .then(bufToHex);
   }
 
+  /* The published content file is the portable copy — it lets the author unlock
+     on any device. The device copy covers the window before the first publish.
+     Either one counts. */
+  function credentials() {
+    var published = state.data && state.data.admin;
+    if (published && published.passHash) return published;
+    var local = adminSession().creds;
+    if (local && local.passHash) return local;
+    return null;
+  }
+
   function hasPassphrase() {
-    return !!(state.data && state.data.admin && state.data.admin.passHash);
+    return !!credentials();
   }
 
   function setPassphrase(passphrase) {
     var salt = randomSaltHex();
     var iters = DEFAULTS.admin.iterations;
     return derive(passphrase, salt, iters).then(function (hash) {
+      var creds = { passSalt: salt, passHash: hash, iterations: iters };
       state.data.admin.passSalt = salt;
       state.data.admin.passHash = hash;
       state.data.admin.iterations = iters;
+      // Also keep it on the device. The copy in the content file only reaches
+      // this browser once the site has been published, and until then locking
+      // would otherwise lose the passphrase that unlocks the draft holding it.
+      saveAdminSession({ creds: creds });
       markDirty();
       return true;
     });
   }
 
   function checkPassphrase(passphrase) {
-    var a = state.data.admin;
-    if (!a.passHash) return Promise.resolve(false);
+    var a = credentials();
+    if (!a) return Promise.resolve(false);
     return derive(passphrase, a.passSalt, a.iterations || DEFAULTS.admin.iterations)
       .then(function (hash) {
         // Constant-time-ish compare. Both strings are the same length here.
@@ -322,12 +338,40 @@
   function unlock() {
     saveAdminSession({ unlocked: true });
     state.isAdmin = true;
+
+    /* A draft is only loaded for an admin, so anything written before this
+       device was locked is sitting in storage unread. Adopt it now — otherwise
+       the author unlocks and finds their unpublished writing gone. */
+    var draft = readLS(LS.draft, null);
+    if (draft) {
+      var draftData = normalise(draft);
+      if (!state.published || !sameContent(draftData, state.published)) {
+        state.data = draftData;
+        state.dirty = true;
+      }
+    }
+    emit('change');
   }
 
+  /* Locking hides the editing tools; it does not throw the token away.
+     GitHub shows a token exactly once, so discarding it on every lock forces
+     the author to generate a brand new one each time they step away — which
+     is not security, just a tax on writing. Use forgetToken() to actually
+     remove it. */
   function lock() {
-    // Forget the token too — locking should mean locking.
-    writeLS(LS.admin, { unlocked: false, token: '' });
+    // Flip the flag and keep everything else. Rebuilding the session object
+    // here silently drops whatever else it carries — which is how the saved
+    // passphrase went missing the moment the author locked the site.
+    var session = adminSession();
+    session.unlocked = false;
+    writeLS(LS.admin, session);
     state.isAdmin = false;
+  }
+
+  function forgetToken() {
+    var session = adminSession();
+    session.token = '';
+    writeLS(LS.admin, session);
   }
 
   /* --------------------------------------------------------------- lifecycle */
@@ -373,8 +417,18 @@
         state.isAdmin = !!session.unlocked;
 
         if (draft && state.isAdmin) {
-          state.data = normalise(draft);
-          state.dirty = true;
+          var draftData = normalise(draft);
+          // The published file may already match this draft — the author
+          // uploaded it by hand, or published from another device. Without
+          // this check the site would claim unpublished changes forever.
+          if (state.published && sameContent(draftData, state.published)) {
+            try { global.localStorage.removeItem(LS.draft); } catch (err) { /* ignore */ }
+            state.data = clone(state.published);
+            state.dirty = false;
+          } else {
+            state.data = draftData;
+            state.dirty = true;
+          }
         } else {
           state.data = clone(state.published || normalise(DEFAULTS));
           state.dirty = false;
@@ -382,6 +436,21 @@
         emit('change');
         return state.data;
       });
+  }
+
+  /* Two versions hold the same site when everything but the timestamp matches;
+     the timestamp changes on every keystroke and would never compare equal. */
+  function sameContent(a, b) {
+    var strip = function (data) {
+      var copy = clone(data);
+      copy.updatedAt = '';
+      return JSON.stringify(copy);
+    };
+    try {
+      return strip(a) === strip(b);
+    } catch (err) {
+      return false;
+    }
   }
 
   /* ------------------------------------------------------------------ events */
@@ -583,14 +652,17 @@
     markDirty: markDirty,
     markPublished: markPublished,
     discardDraft: discardDraft,
+    sameContent: sameContent,
 
     hasPassphrase: hasPassphrase,
+    credentials: credentials,
     setPassphrase: setPassphrase,
     checkPassphrase: checkPassphrase,
     adminSession: adminSession,
     saveAdminSession: saveAdminSession,
     unlock: unlock,
     lock: lock,
+    forgetToken: forgetToken,
 
     entries: entries,
     visibleEntries: visibleEntries,
