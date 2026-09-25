@@ -96,6 +96,33 @@
     return res.json().catch(function () { return {}; });
   }
 
+  /* fetch() rejects with a bare "Failed to fetch" whenever the request never
+     reaches GitHub at all — no connection, a blocked host, or a page served
+     from somewhere that is not allowed to call the API. That message tells an
+     author nothing they can act on, so name the real possibilities instead. */
+  function networkError(err) {
+    var offline = global.navigator && global.navigator.onLine === false;
+    var message = offline
+      ? 'You appear to be offline. Publishing needs a connection to GitHub — your writing is saved here ' +
+        'and will still be waiting when you are back online.'
+      : 'Could not reach GitHub at all. Three things do this: no connection; opening this site from a ' +
+        'preview or copied link instead of its own address, which browsers do not allow to call GitHub; ' +
+        'or an extension or network blocking api.github.com.';
+    var wrapped = new Error(message);
+    wrapped.cause = err;
+    wrapped.network = true;
+    return wrapped;
+  }
+
+  /* Every call to GitHub goes through here, so a dead network reads the same
+     way wherever it happens. */
+  function apiFetch(url, init) {
+    return fetch(url, init).catch(function (err) {
+      // A real HTTP error resolves; only a failed request rejects.
+      throw networkError(err);
+    });
+  }
+
   /* Fetch the file's current blob SHA. Null means the file is not there yet,
      which is a normal first publish, not an error. */
   function currentSha(cfg) {
@@ -103,7 +130,7 @@
       cfg.path.split('/').map(encodeURIComponent).join('/') +
       '?ref=' + encodeURIComponent(cfg.branch);
 
-    return fetch(url, { headers: headers(), cache: 'no-store' }).then(function (res) {
+    return apiFetch(url, { headers: headers(), cache: 'no-store' }).then(function (res) {
       if (res.status === 404) return null;
       if (!res.ok) return apiJson(res).then(function (b) { throw new Error(describeError(res, b)); });
       return apiJson(res).then(function (b) { return b.sha || null; });
@@ -114,7 +141,7 @@
     var url = API + '/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' +
       cfg.path.split('/').map(encodeURIComponent).join('/');
 
-    return fetch(url, {
+    return apiFetch(url, {
       method: 'PUT',
       headers: Object.assign({ 'Content-Type': 'application/json' }, headers()),
       body: JSON.stringify({
@@ -140,7 +167,7 @@
     if (!token()) return Promise.reject(new Error('Paste a GitHub token first.'));
     if (!cfg.owner || !cfg.repo) return Promise.reject(new Error('Fill in the owner and repository.'));
 
-    return fetch(API + '/repos/' + cfg.owner + '/' + cfg.repo, { headers: headers() })
+    return apiFetch(API + '/repos/' + cfg.owner + '/' + cfg.repo, { headers: headers() })
       .then(function (res) {
         if (!res.ok) return apiJson(res).then(function (b) { throw new Error(describeError(res, b)); });
         return apiJson(res);
@@ -227,7 +254,12 @@
       })
       .catch(function (err) {
         if (note.parentNode) note.parentNode.removeChild(note);
-        UI.toast(err.message || 'Publishing failed.', 'error', 8000);
+        UI.toast(err.message || 'Publishing failed.', 'error', 11000);
+        if (err.network) {
+          // Nothing was lost — say so, and offer the route that needs no API.
+          UI.toast('Your writing is safe on this device. Settings → Publish also lets you ' +
+                   'download the file and upload it to GitHub by hand.', null, 11000);
+        }
         console.error('[publish]', err);
       })
       .then(function () { inFlight = false; });
