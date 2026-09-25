@@ -52,6 +52,282 @@
     return sel;
   }
 
+  /* ================================================================ Content */
+  /* Everything written, in one list: search it, filter it, edit it, delete it.
+     Without this, changing a piece means finding it on the home page first —
+     which stops working somewhere around the fiftieth poem, and never worked
+     at all for drafts, since those are scattered among the rest. */
+
+  var contentFilter = { q: '', type: '', drafts: false };
+  var contentSelection = {};
+  var selectMode = false;
+
+  function contentTab() {
+    var host = el('div', {});
+    var listHost = el('div', {});
+
+    function matching() {
+      var list = Store.select({
+        type: contentFilter.type || null,
+        query: contentFilter.q,
+        sortBy: 'date-desc'
+      });
+      if (contentFilter.drafts) {
+        list = list.filter(function (e) { return e.draft; });
+      }
+      return list;
+    }
+
+    function selectedIds() {
+      return Object.keys(contentSelection).filter(function (id) {
+        return contentSelection[id] && Store.getEntry(id);
+      });
+    }
+
+    function row(entry) {
+      var meta = [
+        Views.typeLabel(entry.type),
+        I18n.formatDate(entry.date),
+        entry.lang.toUpperCase()
+      ].join(' · ');
+
+      var actions = el('div', { class: 'row-actions' }, [
+        el('button', {
+          class: 'icon-btn' + (entry.pinned ? ' is-on' : ''),
+          type: 'button',
+          title: entry.pinned ? 'Unpin' : 'Pin to the top',
+          'aria-label': entry.pinned ? 'Unpin' : 'Pin to the top',
+          onclick: function (e) {
+            e.stopPropagation();
+            Store.updateEntry(entry.id, { pinned: !entry.pinned });
+            drawList();
+            App.rerender();
+          }
+        }, icon('pin')),
+        el('button', {
+          class: 'icon-btn' + (entry.draft ? ' is-on' : ''),
+          type: 'button',
+          title: entry.draft ? 'Publish this one (currently a draft)' : 'Make it a draft again',
+          'aria-label': entry.draft ? 'Currently a draft' : 'Currently visible',
+          onclick: function (e) {
+            e.stopPropagation();
+            Store.updateEntry(entry.id, { draft: !entry.draft });
+            drawList();
+            App.rerender();
+          }
+        }, icon(entry.draft ? 'eyeOff' : 'eye')),
+        el('button', {
+          class: 'icon-btn',
+          type: 'button',
+          title: t('action.delete'),
+          'aria-label': t('action.delete'),
+          onclick: function (e) {
+            e.stopPropagation();
+            UI.confirmAction({
+              title: t('action.delete') + '?',
+              message: '“' + (entry.title || Views.preview(entry, 1)).slice(0, 60) +
+                       '” will be removed. This cannot be undone once you publish.',
+              danger: true
+            }).then(function (yes) {
+              if (!yes) return;
+              Store.removeEntry(entry.id);
+              delete contentSelection[entry.id];
+              drawList();
+              App.rerender();
+            });
+          }
+        }, icon('trash'))
+      ]);
+
+      var checkbox = selectMode ? el('button', {
+        class: 'row-check' + (contentSelection[entry.id] ? ' is-on' : ''),
+        type: 'button',
+        'aria-label': 'Select',
+        'aria-pressed': contentSelection[entry.id] ? 'true' : 'false',
+        onclick: function (e) {
+          e.stopPropagation();
+          contentSelection[entry.id] = !contentSelection[entry.id];
+          drawList();
+        }
+      }, contentSelection[entry.id] ? icon('check') : null) : null;
+
+      return el('div', {
+        class: 'row-item',
+        role: 'button',
+        tabindex: '0',
+        onclick: function () {
+          if (selectMode) {
+            contentSelection[entry.id] = !contentSelection[entry.id];
+            drawList();
+            return;
+          }
+          UI.closeSheet();
+          Editor.openEntryEditor(entry);
+        },
+        onkeydown: function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); }
+        }
+      }, [
+        checkbox,
+        el('div', { class: 'row-main' }, [
+          el('div', { class: 'row-meta' }, [
+            el('span', { text: meta }),
+            entry.draft ? el('span', { class: 'card-draft', text: 'Draft' }) : null,
+            entry.pinned ? el('span', { class: 'row-flag', text: 'Pinned' }) : null
+          ]),
+          el('div', {
+            class: 'row-title',
+            lang: entry.lang,
+            text: entry.title || Views.preview(entry, 1).replace(/\s+/g, ' ').slice(0, 70)
+          }),
+          entry.title ? el('div', {
+            class: 'row-sub',
+            lang: entry.lang,
+            text: Views.preview(entry, 1).replace(/\s+/g, ' ').slice(0, 90)
+          }) : null
+        ]),
+        selectMode ? null : actions
+      ]);
+    }
+
+    function drawList() {
+      UI.clear(listHost);
+      var list = matching();
+      var total = Store.entries().length;
+
+      var bar = el('div', { class: 'row-toolbar' }, [
+        el('span', {
+          class: 'field-hint',
+          style: { marginTop: '0', flex: '1' },
+          text: list.length === total
+            ? total + (total === 1 ? ' piece' : ' pieces')
+            : list.length + ' of ' + total + ' shown'
+        }),
+        el('button', {
+          class: 'btn btn-sm' + (selectMode ? ' btn-primary' : ''),
+          type: 'button',
+          text: selectMode ? 'Done' : 'Select',
+          onclick: function () {
+            selectMode = !selectMode;
+            if (!selectMode) contentSelection = {};
+            drawList();
+          }
+        })
+      ]);
+      listHost.appendChild(bar);
+
+      if (selectMode) {
+        var picked = selectedIds();
+        listHost.appendChild(el('div', { class: 'row-toolbar' }, [
+          el('button', {
+            class: 'btn btn-sm', type: 'button',
+            text: picked.length === list.length ? 'Select none' : 'Select all shown',
+            onclick: function () {
+              var all = picked.length === list.length;
+              list.forEach(function (e) { contentSelection[e.id] = !all; });
+              drawList();
+            }
+          }),
+          el('button', {
+            class: 'btn btn-sm btn-danger',
+            type: 'button',
+            disabled: !picked.length,
+            text: picked.length ? 'Delete ' + picked.length : 'Delete',
+            onclick: function () {
+              UI.confirmAction({
+                title: 'Delete ' + picked.length + ' ' + (picked.length === 1 ? 'piece' : 'pieces') + '?',
+                message: 'This cannot be undone once you publish.',
+                danger: true
+              }).then(function (yes) {
+                if (!yes) return;
+                picked.forEach(function (id) { Store.removeEntry(id); });
+                contentSelection = {};
+                selectMode = false;
+                UI.toast(picked.length + ' deleted', 'ok');
+                drawList();
+                App.rerender();
+              });
+            }
+          })
+        ]));
+      }
+
+      if (!list.length) {
+        listHost.appendChild(el('div', {
+          class: 'field-hint',
+          style: { padding: '26px 0', textAlign: 'center' },
+          text: total ? 'Nothing matches that.' : 'Nothing written yet. Use the + button to start.'
+        }));
+        return;
+      }
+
+      listHost.appendChild(el('div', { class: 'row-list' }, list.map(row)));
+    }
+
+    /* --- search and filters --- */
+    var search = el('input', {
+      class: 'input',
+      type: 'search',
+      value: contentFilter.q,
+      placeholder: t('action.searchPlaceholder'),
+      oninput: function () { contentFilter.q = search.value; drawList(); }
+    });
+    host.appendChild(UI.field(null, search));
+
+    var chips = el('div', { class: 'chip-row', style: { flexWrap: 'wrap', marginBottom: '14px' } });
+    [
+      { id: '', label: t('tab.all') },
+      { id: 'poem', label: t('tab.poems') },
+      { id: 'blog', label: t('tab.blogs') },
+      { id: 'quote', label: t('tab.quotes') }
+    ].forEach(function (opt) {
+      chips.appendChild(el('button', {
+        class: 'chip' + (contentFilter.type === opt.id && !contentFilter.drafts ? ' is-active' : ''),
+        type: 'button',
+        text: opt.label,
+        onclick: function () {
+          contentFilter.type = opt.id;
+          contentFilter.drafts = false;
+          drawChips();
+          drawList();
+        }
+      }));
+    });
+    chips.appendChild(el('button', {
+      class: 'chip' + (contentFilter.drafts ? ' is-active' : ''),
+      type: 'button',
+      text: 'Drafts',
+      onclick: function () {
+        contentFilter.drafts = !contentFilter.drafts;
+        if (contentFilter.drafts) contentFilter.type = '';
+        drawChips();
+        drawList();
+      }
+    }));
+
+    function drawChips() {
+      UI.$$('.chip', chips).forEach(function (n, i) {
+        var isDraftChip = i === 4;
+        var ids = ['', 'poem', 'blog', 'quote'];
+        n.classList.toggle('is-active', isDraftChip
+          ? contentFilter.drafts
+          : (contentFilter.type === ids[i] && !contentFilter.drafts));
+      });
+    }
+
+    host.appendChild(chips);
+    host.appendChild(el('button', {
+      class: 'btn btn-sm btn-primary',
+      type: 'button',
+      style: { marginBottom: '16px' },
+      onclick: function () { UI.closeSheet(); Editor.openEntryEditor(null); }
+    }, [icon('plus'), el('span', { text: 'Write something new' })]));
+
+    host.appendChild(listHost);
+    drawList();
+    return host;
+  }
+
   /* ================================================================== Site  */
 
   function siteTab() {
@@ -686,6 +962,7 @@
 
   function openSettings(initial) {
     var tabs = Editor.tabbed([
+      { id: 'content',     label: 'Content',     render: contentTab },
       { id: 'site',        label: 'Site',        render: siteTab },
       { id: 'home',        label: 'Home page',   render: homeTab },
       { id: 'theme',       label: 'Theme',       render: themeTab },

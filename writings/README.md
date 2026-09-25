@@ -108,6 +108,17 @@ words. The preview at the top updates as you type.
 
 Keyboard: `N` for a new piece, `Ctrl/Cmd + S` to publish.
 
+### Finding and changing what you have written
+
+Gear → **Content** lists everything, newest first — drafts included, which the
+home page deliberately hides from readers. Search it, narrow it to poems, blogs,
+quotes or drafts, and tap any row to edit it.
+
+Each row also carries three controls: pin it to the top of every list, switch it
+between draft and visible, or delete it. **Select** turns on checkboxes for
+clearing out several at once — useful for deleting the sample pieces this site
+ships with.
+
 ### Tags
 
 Tags are how you get through a few hundred pieces. Add them in the editor,
