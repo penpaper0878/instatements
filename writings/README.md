@@ -79,8 +79,13 @@ The owner and repository should already be filled in. You need one token:
 
 Now **Publish** pushes your work live in about a minute.
 
-> The token is stored in your browser's local storage on that device only. It is
-> never written into any file this site serves, so no visitor can ever read it.
+> **You paste the token once per device, not once per poem.** It stays in that
+> browser — locking the site does not remove it. To read it back later, open
+> Settings → Publish and tap the eye beside the Token field; GitHub never shows
+> a token a second time, so that field is the only place it still exists. There
+> is a *Remove token from this device* button when you actually want it gone.
+>
+> It is never written into any file this site serves, so no visitor can read it.
 > If you lose the device, revoke the token on GitHub and make a new one.
 
 ---
@@ -270,6 +275,10 @@ the next load.
 **Everything vanished on a device.** That device had an unpublished draft and
 lost its storage. Your published site is unaffected — reload it. Restore a
 backup from Gear → Data if you had local work.
+
+**It says "unpublished changes" after I wrote something.** That is the normal
+state, not a problem. Writing saves to your device immediately; the live site
+only changes when you press **Publish**. The badge clears once you do.
 
 **Locked out of admin.** Edit `data/content.json` in GitHub directly, empty the
 `admin.passHash` and `admin.passSalt` strings, and commit. The next unlock lets

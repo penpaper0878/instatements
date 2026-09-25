@@ -501,7 +501,31 @@
           tokenInput.type = tokenInput.type === 'password' ? 'text' : 'password';
         }
       }, icon('eye'))
-    ])));
+    ]), 'Paste it once. It stays on this device — locking the site does not remove it, and you will not ' +
+        'need to paste it again. Tap the eye to read it back: GitHub never shows a token a second time, ' +
+        'so this field is the only place you can still see it.'));
+
+    if (session.token) {
+      host.appendChild(el('button', {
+        class: 'btn btn-sm btn-danger', type: 'button',
+        style: { marginBottom: '16px' },
+        onclick: function () {
+          UI.confirmAction({
+            title: 'Remove the token from this device?',
+            message: 'Publishing will stop working here until you paste a token again. GitHub cannot show ' +
+                     'you this one a second time, so you would need to generate a new one. Your writing is ' +
+                     'not affected.',
+            confirmText: 'Remove it',
+            danger: true
+          }).then(function (yes) {
+            if (!yes) return;
+            Store.forgetToken();
+            UI.toast('Token removed from this device', 'ok');
+            redraw();
+          });
+        }
+      }, [icon('trash'), el('span', { text: 'Remove token from this device' })]));
+    }
 
     host.appendChild(el('div', {
       style: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' }
@@ -634,6 +658,7 @@
       }, [icon('lock'), el('span', { text: 'Change passphrase' })]),
       el('button', {
         class: 'btn btn-sm btn-ghost', type: 'button',
+        title: 'Hides the editing tools. Your token and your writing stay.',
         onclick: function () {
           Store.lock();
           UI.closeSheet();
