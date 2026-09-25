@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-25T11:12:00.945Z",
+  "updatedAt": "2026-09-25T11:43:42.368Z",
   "site": {
     "name": "My Writings",
     "nameGu": "",
@@ -60,6 +60,44 @@
     "sortBy": "date-desc"
   },
   "entries": [
+    {
+      "type": "poem",
+      "lang": "hi",
+      "date": "2026-09-25",
+      "id": "e_mugvymxfoiag5",
+      "title": "समय के साथ",
+      "body": "नाते वो टूटे से लगते हैं,\n जब रिश्ते रूठे से लगते हैं,\nकैसे बढ़े आगे की साथ पाये,\n उनका जो पीछे छूटे से लगते है,\nवक्त का ये अजीब सितम,\n ख्याल उनके अच्छे आते हैं,\n मगर सच बताउ वो,\n सारे झूठे से लगते हैं",
+      "excerpt": "",
+      "tags": [
+        "समय",
+        "साथ",
+        "रिश्ते"
+      ],
+      "collections": [],
+      "pinned": false,
+      "draft": false,
+      "cover": "",
+      "credit": "",
+      "style": {
+        "preset": "inherit",
+        "font": "Kalam",
+        "size": 1,
+        "lineHeight": 1.85,
+        "letterSpacing": 0,
+        "align": "center",
+        "textColor": "",
+        "bgType": "gradient",
+        "bgColor": "#101418",
+        "gradFrom": "#4B1248",
+        "gradTo": "#F0C27B",
+        "gradAngle": 160,
+        "bgImage": "",
+        "bgDim": 0.35,
+        "bgBlur": 0,
+        "textShadow": false,
+        "frame": "quotes"
+      }
+    },
     {
       "type": "poem",
       "lang": "hi",
