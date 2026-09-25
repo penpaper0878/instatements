@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-25T11:48:41.281Z",
+  "updatedAt": "2026-09-25T11:49:18.535Z",
   "site": {
     "name": "Versify By Yash",
     "nameGu": "",
@@ -41,7 +41,7 @@
     "perPage": 9,
     "hero": {
       "enabled": true,
-      "title": "Versify By Yash",
+      "title": "World of Whimsy",
       "subtitle": "",
       "showAvatar": true,
       "align": "center",
